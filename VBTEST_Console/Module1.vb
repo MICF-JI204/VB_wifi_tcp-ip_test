@@ -1,37 +1,34 @@
-﻿Imports System.Net.Sockets
-Imports System.Net
+﻿Imports System.IO.Ports
 Module Module1
+
 
     'Dim listener As New TcpListener(14204)
 
     Sub Main()
-        Dim localIP As IPAddress = IPAddress.Parse("127.0.0.1")
-        Dim listener As New TcpListener(14204)
-        listener.Start()
-        Console.WriteLine("Listener OK!")
-        If listener.Pending = True Then Console.WriteLine("Incoming connectiong")
-        Dim client As TcpClient = listener.AcceptTcpClient()
-        Dim datastream As NetworkStream = client.GetStream()
-        Console.WriteLine("Incoming connection established")
-        Dim bytes(1024) As Byte
-        Dim data As String = Nothing
-        Dim i As Integer
+
+        Dim serialport As New SerialPort
+
+        Console.WriteLine("Listing Available Serial Ports")
+        Dim str As String
+        For Each str In My.Computer.Ports.SerialPortNames
+            Console.WriteLine(str)
+        Next
+        Console.WriteLine("Select Proper Port")
+        Dim portname As String = Console.ReadLine()
+        portname.Replace(vbLf, "")
+        portname.Replace(vbCr, "") '去掉回车空格
+        serialport.PortName = portname
+        serialport.Parity = Parity.None
+        serialport.BaudRate = 9600
+        serialport.StopBits = StopBits.One
+        serialport.DtrEnable = False
+        Console.WriteLine("Opening Serial Port : " & portname & "Now")
+        serialport.Open()
         While True
-            If datastream.DataAvailable Then
-                i = datastream.Read(bytes, 0, bytes.Length)
-                ' Translate data bytes to a ASCII string.
-                data = System.Text.Encoding.ASCII.GetString(bytes, 0, i)
-                Console.WriteLine("Received: {0}", data)
-
-                ' Process the data sent by the client.
-                data = data.ToUpper()
-                Dim msg As Byte() = System.Text.Encoding.ASCII.GetBytes(data)
-
-                ' Send back a response.
-                datastream.Write(msg, 0, msg.Length)
-                Console.WriteLine("Sent: {0}", data)
-            End If
+            Console.Write(serialport.ReadChar())
         End While
+
     End Sub
+
 
 End Module
